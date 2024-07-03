@@ -12,7 +12,7 @@ export interface Result {
 export async function scrapeTable(): Promise<Result | null> {
   try {
     const { data } = await axios.get("https://www.roe.vsei.ua/disconnections", {
-      timeout: 30000,
+      timeout: 60000,
     });
     const $ = cheerio.load(data);
 
@@ -20,6 +20,13 @@ export async function scrapeTable(): Promise<Result | null> {
     const firstRow = table.find("tr").eq(3);
     const date: string = firstRow.find("td").eq(0).text().trim();
     const nextRow = table.find("tr").eq(4); // Наступний рядок
+
+    const cleanTimeString = (time: string): string => {
+      return time
+        .replace(/[^\d.:,-]/g, "")
+        .replace(/,\s*$/, "")
+        .trim();
+    };
 
     const getQueueTimes = (
       row: cheerio.Cheerio<cheerio.Element>,
@@ -32,13 +39,19 @@ export async function scrapeTable(): Promise<Result | null> {
       }
       return queueTimesHtml
         .split("<p>")
-        .map((item) => item.replace(/<\/?p>/g, "").trim())
+        .map((item) => cleanTimeString(item.replace(/<\/?p>/g, "").trim()))
         .filter((item) => item.length > 0);
     };
 
     const firstQueueTimes: string[] = getQueueTimes(firstRow, 1);
     const nextDate: string = nextRow.find("td").eq(0).text().trim();
-    const nextQueueTimes: string[] = getQueueTimes(nextRow, 1); // Індекс 1 для першої черги наступної дати
+    const nextQueueTimes: string[] = nextRow
+      .find("td")
+      .eq(1)
+      .text()
+      .includes("Очікується")
+      ? ["Очікується"]
+      : getQueueTimes(nextRow, 1);
 
     const updatedText = $("body")
       .text()

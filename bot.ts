@@ -64,16 +64,22 @@ async function editTelegramMessage(message: string): Promise<void> {
   }
 }
 
+const formatTime = (date: Date): string => {
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
 function formatMessage(data: Result): string {
   return `<u>${
     data.date
-  }</u> очікуються відключення електропостачання:\n${data.firstQueueTimes.join(
+  }</u> очікуються відключення електропостачання:\n<b>${data.firstQueueTimes.join(
     ", "
-  )}\n\n<u>${
+  )}</b>\n\n<u>${
     data.nextDate
-  }</u> очікуються відключення електропостачання:\n${data.nextQueueTimes.join(
+  }</u> очікуються відключення електропостачання:\n<b>${data.nextQueueTimes.join(
     ", "
-  )}\n\n<i>Оновлено: ${data.updatedTime}</i>`;
+  )}</b>\n\n<i>Оновлено: ${data.updatedTime} (${formatTime(new Date())})</i>`;
 }
 
 async function checkAndUpdate(): Promise<void> {
